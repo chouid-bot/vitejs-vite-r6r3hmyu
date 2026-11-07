@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>미니 굴삭기 렌탈 종합 관리 시스템</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      }
+
+      body {
+        background-color: #f1f5f9;
+        color: #1e293b;
+      }
+
+      .dashboard-container {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .subtitle {
+        color: #64748b;
+        font-size: 0.9rem;
+        margin-top: 4px;
+      }
+
+      /* 상단 요약 카드 */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+
+      .stat-card {
+        background: white;
+        padding: 16px 20px;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        border-left: 5px solid #3b82f6;
+      }
+
+      .stat-card.alert {
+        border-left-color: #ef4444;
+      }
+
+      .stat-title {
+        font-size: 0.85rem;
+        color: #64748b;
+        margin-bottom: 4px;
+      }
+
+      .stat-value {
+        font-size: 1.6rem;
+        font-weight: 700;
+      }
+
+      .text-blue { color: #2563eb; }
+      .text-red { color: #ef4444; }
+
+      /* 툴바 */
+      .toolbar {
+        background: white;
+        padding: 12px 18px;
+        border-radius: 12px;
+        margin-bottom: 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        font-size: 0.9rem;
+        font-weight: 600;
+      }
+
+      .filter-select {
+        padding: 7px 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        margin-left: 8px;
+        outline: none;
+      }
+
+      /* 메인 2단 구조 */
+      .main-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 20px;
+      }
+
+      @media (max-width: 900px) {
+        .main-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* 달력 카드 */
+      .calendar-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      }
+
+      /* 연/월 네비게이션 컨트롤 */
+      .cal-nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .cal-nav-controls {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .cal-nav button {
+        background: #f8fafc;
+        border: 1px solid #cbd5e1;
+        padding: 6px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 700;
+        font-size: 0.9rem;
+        transition: 0.15s;
+      }
+
+      .cal-nav button:hover {
+        background: #e2e8f0;
+      }
+
+      .cal-select {
+        padding: 7px 10px;
+        border: 1px solid #94a3b8;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        background: white;
+        cursor: pointer;
+        outline: none;
+      }
+
+      .btn-today {
+        background: #e0f2fe !important;
+        color: #0369a1 !important;
+        border-color: #bae6fd !important;
+      }
+
+      .btn-today:hover {
+        background: #bae6fd !important;
+      }
+
+      .cal-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 4px;
+      }
+
+      .cal-day-header {
+        text-align: center;
+        font-weight: 700;
+        padding: 8px 0;
+        color: #64748b;
+        font-size: 0.85rem;
+      }
+
+      .cal-day {
+        min-height: 95px;
+        background: #f8fafc;
+        border-radius: 6px;
+        padding: 6px;
+        border: 2px solid transparent;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        transition: 0.15s;
+      }
+
+      .cal-day:hover {
+        background-color: #f1f5f9;
+      }
+
+      .cal-day.active-day {
+        border-color: #2563eb;
+        background-color: #eff6ff;
+      }
+
+      .cal-day.is-today {
+        background-color: #f0fdf4;
+      }
+
+      .cal-day.empty {
+        background: transparent;
+        cursor: default;
+      }
+
+      .day-number {
+        font-size: 0.85rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+
+      /* 일정 라벨 배지 */
+      .event-chip {
+        font-size: 0.7rem;
+        padding: 2px 4px;
+        border-radius: 4px;
+        margin-bottom: 3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: white;
+        font-weight: 500;
+      }
+
+      .brand-kubota { background-color: #ea580c; }  /* 구보다: 주황 */
+      .brand-yanmar { background-color: #dc2626; }  /* 얀마: 빨강 */
+      .brand-kobelco { background-color: #0284c7; } /* 코벨코: 파랑 */
+
+      /* 우측 상세 패널 */
+      .detail-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        height: fit-content;
+      }
+
+      .detail-header {
+        border-bottom: 1px solid #e2e8f0;
+        padding-bottom: 10px;
+        margin-bottom: 14px;
+      }
+
+      .rental-item {
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 12px;
+        background: #fafafa;
+        transition: 0.2s;
+      }
+
+      .rental-item:hover {
+        border-color: #cbd5e1;
+      }
+
+      .badge {
+        display: inline-block;
+        font-size: 0.75rem;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        border: none;
+      }
+
+      .badge-paid { background: #dcfce7; color: #15803d; }
+      .badge-unpaid { background: #fee2e2; color: #b91c1c; }
+
+      /* 삭제 버튼 스타일 */
+      .btn-delete {
+        background: #f8fafc;
+        border: 1px solid #cbd5e1;
+        color: #64748b;
+        font-size: 0.75rem;
+        padding: 4px 9px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: 0.15s;
+      }
+
+      .btn-delete:hover {
+        background: #fee2e2;
+        border-color: #fca5a5;
+        color: #ef4444;
+      }
+
+      /* 버튼 */
+      .btn-primary {
+        background-color: #2563eb;
+        color: white;
+        border: none;
+        padding: 10px 18px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .btn-secondary {
+        background: #f1f5f9;
+        border: 1px solid #cbd5e1;
+        padding: 10px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+
+      /* 모달 팝업 */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.55);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        z-index: 999;
+      }
+
+      .modal-overlay.hidden {
+        display: none;
+      }
+
+      .modal-content {
+        background: white;
+        width: 100%;
+        max-width: 520px;
+        border-radius: 12px;
+        padding: 24px;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+
+      .modal-content h3 {
+        margin-bottom: 14px;
+      }
+
+      .form-group {
+        margin-bottom: 13px;
+      }
+
+      .form-group label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 4px;
+        color: #475569;
+      }
+
+      .form-group input, .form-group select {
+        width: 100%;
+        padding: 9px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        font-size: 0.9rem;
+      }
+
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 18px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="dashboard-container">
+      <!-- 1. 헤더 -->
+      <header class="header-section">
+        <div>
+          <h2>🚜 미니 굴삭기 렌탈 종합 관리 대시보드</h2>
+          <p class="subtitle">배차 등록, 수정, 삭제 및 미수금 완납 정산 관리</p>
+        </div>
+        <button id="btn-open-modal" class="btn-primary">+ 신규 렌탈/배차 등록</button>
+      </header>
+
+      <!-- 2. 상단 통계 카드 -->
+      <section class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-title">전체 등록된 렌탈 건수</div>
+          <div class="stat-value" id="stat-total-rentals">0건</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">오늘 가동/출고 중 장비</div>
+          <div class="stat-value text-blue" id="stat-active-today">0대</div>
+        </div>
+        <div class="stat-card alert">
+          <div class="stat-title">미수금 건수 (클릭시 즉시 입금전환)</div>
+          <div class="stat-value text-red" id="stat-unpaid">0건</div>
+        </div>
+      </section>
+
+      <!-- 3. 필터 툴바 -->
+      <section class="toolbar">
+        <div>
+          <span>제조사 필터: </span>
+          <select id="filter-brand" class="filter-select">
+            <option value="ALL">전체 보기 (구보다 / 얀마 / 코벨코)</option>
+            <option value="구보다">구보다 (008, 017)</option>
+            <option value="얀마">얀마 (017, 020, 035)</option>
+            <option value="코벨코">코벨코 (017, 020, 035)</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- 4. 메인 화면 (달력 + 우측 상세) -->
+      <main class="main-grid">
+        <!-- 왼쪽 달력 카드 -->
+        <div class="calendar-card">
+          <!-- 연/월 선택 및 넘기기 툴바 -->
+          <div class="cal-nav">
+            <div class="cal-nav-controls">
+              <button id="btn-prev-year" title="1년 전으로 이동">≪ 작년</button>
+              <button id="btn-prev-month" title="1달 전으로 이동">＜</button>
+              
+              <select id="select-year" class="cal-select"></select>
+              <select id="select-month" class="cal-select"></select>
+              
+              <button id="btn-next-month" title="1달 후로 이동">＞</button>
+              <button id="btn-next-year" title="1년 후로 이동">내년 ≫</button>
+            </div>
+            
+            <button id="btn-today" class="btn-today" title="오늘 날짜로 바로 이동">오늘 날짜로</button>
+          </div>
+
+          <div class="cal-grid" id="calendar-grid"></div>
+        </div>
+
+        <!-- 오른쪽 선택 날짜 현황 (삭제 기능 포함) -->
+        <div class="detail-card">
+          <h3 id="detail-title" class="detail-header">📅 배차/반납 현황</h3>
+          <div id="detail-list"></div>
+        </div>
+      </main>
+    </div>
+
+    <!-- 5. 신규 배차 등록 모달 팝업 -->
+    <div id="modal" class="modal-overlay hidden">
+      <div class="modal-content">
+        <h3>🚜 신규 굴삭기 배차 등록</h3>
+        <form id="rental-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label>굴삭기 모델 (고정 목록)</label>
+              <select id="form-model" required>
+                <optgroup label="구보다">
+                  <option value="구보다|008">구보다 008</option>
+                  <option value="구보다|017">구보다 017</option>
+                </optgroup>
+                <optgroup label="얀마">
+                  <option value="얀마|017">얀마 017</option>
+                  <option value="얀마|020">얀마 020</option>
+                  <option value="얀마|035">얀마 035</option>
+                </optgroup>
+                <optgroup label="코벨코">
+                  <option value="코벨코|017">코벨코 017</option>
+                  <option value="코벨코|020">코벨코 020</option>
+                  <option value="코벨코|035">코벨코 035</option>
+                </optgroup>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>장비 고유번호 (직접 입력)</label>
+              <input type="text" id="form-serial" placeholder="예: 01호, 경기04가1234 등" required />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>대여자 (고객/현장 소장명)</label>
+            <input type="text" id="form-customer" placeholder="예: 김반장 (한강토건)" required />
+          </div>
+
+          <div class="form-group">
+            <label>연락처</label>
+            <input type="text" id="form-phone" placeholder="010-0000-0000" />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>출고일 (대여 시작)</label>
+              <input type="date" id="form-start-date" required />
+            </div>
+            <div class="form-group">
+              <label>반납 예정일</label>
+              <input type="date" id="form-end-date" required />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>렌탈 금액</label>
+              <input type="text" id="form-amount" placeholder="예: 400,000원" />
+            </div>
+            <div class="form-group">
+              <label>입금 여부</label>
+              <select id="form-payment">
+                <option value="UNPAID">미수금</option>
+                <option value="PAID">입금완료</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>현장 메모 / 특이사항</label>
+            <input type="text" id="form-memo" placeholder="예: 브레이커 포함, 지하 터파기 현장" />
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" id="btn-close-modal" class="btn-secondary">취소</button>
+            <button type="submit" class="btn-primary">등록 완료</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 6. 동작 스크립트 -->
+    <script type="module">
+      const realToday = new Date();
+      const todayISO = realToday.toISOString().split('T')[0];
+
+      // 데이터 로컬 저장소 연동
+      const saved = localStorage.getItem('excavator_rentals_v5');
+      let rentals = saved ? JSON.parse(saved) : [
+        {
+          id: 1,
+          brand: '구보다',
+          model: '017',
+          serial: '01호기',
+          customer: '김반장 (상암동 현장)',
+          phone: '010-1234-5678',
+          startDate: todayISO,
+          endDate: new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0],
+          paymentStatus: 'PAID',
+          amount: '400,000원',
+          memo: '기본 바가지 포함',
+        },
+        {
+          id: 2,
+          brand: '얀마',
+          model: '035',
+          serial: '12호(경기04-1234)',
+          customer: '박소장 (하남 신도시)',
+          phone: '010-9876-5432',
+          startDate: todayISO,
+          endDate: new Date(Date.now() + 86400000 * 5).toISOString().split('T')[0],
+          paymentStatus: 'UNPAID',
+          amount: '650,000원',
+          memo: '브레이커 별도 장착 (미수금)',
+        }
+      ];
+
+      function saveRentals() {
+        localStorage.setItem('excavator_rentals_v5', JSON.stringify(rentals));
+      }
+
+      // 상태 관리
+      let viewDate = new Date();
+      let selectedDateStr = todayISO;
+      let brandFilter = 'ALL';
+
+      // DOM 요소
+      const calGrid = document.getElementById('calendar-grid');
+      const selectYear = document.getElementById('select-year');
+      const selectMonth = document.getElementById('select-month');
+      const detailTitle = document.getElementById('detail-title');
+      const detailList = document.getElementById('detail-list');
+      const statTotalRentals = document.getElementById('stat-total-rentals');
+      const statActiveToday = document.getElementById('stat-active-today');
+      const statUnpaid = document.getElementById('stat-unpaid');
+      const filterBrandSelect = document.getElementById('filter-brand');
+      const modal = document.getElementById('modal');
+      const rentalForm = document.getElementById('rental-form');
+
+      // 연도(현재 연도 기준 -5년 ~ +6년) 및 월(1~12월) 드롭다운 초기 채우기
+      function initDropdowns() {
+        const curY = realToday.getFullYear();
+        selectYear.innerHTML = '';
+        for (let y = curY - 5; y <= curY + 6; y++) {
+          const opt = document.createElement('option');
+          opt.value = y;
+          opt.textContent = `${y}년`;
+          selectYear.appendChild(opt);
+        }
+
+        selectMonth.innerHTML = '';
+        for (let m = 0; m < 12; m++) {
+          const opt = document.createElement('option');
+          opt.value = m;
+          opt.textContent = `${m + 1}월`;
+          selectMonth.appendChild(opt);
+        }
+      }
+
+      function syncDropdowns() {
+        selectYear.value = viewDate.getFullYear();
+        selectMonth.value = viewDate.getMonth();
+      }
+
+      function getBrandClass(brand) {
+        if (brand === '구보다') return 'brand-kubota';
+        if (brand === '얀마') return 'brand-yanmar';
+        if (brand === '코벨코') return 'brand-kobelco';
+        return '';
+      }
+
+      function getRentalsForDate(dateStr) {
+        return rentals.filter(r => {
+          const matchDate = dateStr >= r.startDate && dateStr <= r.endDate;
+          if (!matchDate) return false;
+          if (brandFilter === 'ALL') return true;
+          return r.brand === brandFilter;
+        });
+      }
+
+      function updateStats() {
+        const activeCount = getRentalsForDate(todayISO).length;
+        const unpaidCount = rentals.filter(r => r.paymentStatus === 'UNPAID').length;
+        statTotalRentals.textContent = `${rentals.length}건`;
+        statActiveToday.textContent = `${activeCount}대`;
+        statUnpaid.textContent = `${unpaidCount}건`;
+      }
+
+      // 달력 렌더링
+      function renderCalendar() {
+        syncDropdowns();
+
+        const year = viewDate.getFullYear();
+        const month = viewDate.getMonth();
+
+        calGrid.innerHTML = '';
+
+        const days = ['일', '월', '화', '수', '목', '금', '토'];
+        days.forEach(d => {
+          const h = document.createElement('div');
+          h.className = 'cal-day-header';
+          h.textContent = d;
+          calGrid.appendChild(h);
+        });
+
+        const firstDay = new Date(year, month, 1).getDay();
+        const lastDate = new Date(year, month + 1, 0).getDate();
+
+        for (let i = 0; i < firstDay; i++) {
+          const empty = document.createElement('div');
+          empty.className = 'cal-day empty';
+          calGrid.appendChild(empty);
+        }
+
+        for (let d = 1; d <= lastDate; d++) {
+          const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+          const cell = document.createElement('div');
+          
+          let classNames = 'cal-day';
+          if (dateStr === selectedDateStr) classNames += ' active-day';
+          if (dateStr === todayISO) classNames += ' is-today';
+          cell.className = classNames;
+
+          const num = document.createElement('span');
+          num.className = 'day-number';
+          num.textContent = d;
+          cell.appendChild(num);
+
+          const list = getRentalsForDate(dateStr);
+          list.slice(0, 3).forEach(r => {
+            const chip = document.createElement('div');
+            chip.className = `event-chip ${getBrandClass(r.brand)}`;
+            chip.textContent = `${r.model} [${r.serial}] : ${r.customer.split(' ')[0]}`;
+            cell.appendChild(chip);
+          });
+
+          if (list.length > 3) {
+            const more = document.createElement('span');
+            more.style.fontSize = '0.65rem';
+            more.style.color = '#64748b';
+            more.textContent = `+${list.length - 3}건`;
+            cell.appendChild(more);
+          }
+
+          cell.addEventListener('click', () => {
+            selectedDateStr = dateStr;
+            renderCalendar();
+            renderDetails();
+          });
+
+          calGrid.appendChild(cell);
+        }
+
+        updateStats();
+      }
+
+      // 우측 상세 현황 렌더링 (삭제 기능 포함)
+      function renderDetails() {
+        detailTitle.textContent = `📅 ${selectedDateStr} 배차/반납 현황`;
+        detailList.innerHTML = '';
+
+        const list = getRentalsForDate(selectedDateStr);
+
+        if (list.length === 0) {
+          detailList.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 40px 0;">배차된 일정이 없습니다.</div>`;
+          return;
+        }
+
+        list.forEach(r => {
+          const item = document.createElement('div');
+          item.className = 'rental-item';
+          const isPaid = r.paymentStatus === 'PAID';
+
+          item.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <strong style="font-size: 1rem;">[${r.brand} ${r.model}] 고유번호: ${r.serial}</strong>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <button class="badge ${isPaid ? 'badge-paid' : 'badge-unpaid'}" id="pay-btn-${r.id}" title="클릭시 입금상태 변경">
+                  ${isPaid ? '● 입금완료' : '● 미수금 (클릭변경)'}
+                </button>
+                <button class="btn-delete" id="del-btn-${r.id}" title="일정 삭제">
+                  삭제
+                </button>
+              </div>
+            </div>
+            <div style="font-size: 0.85rem; color: #475569; margin-bottom: 4px;">
+              👤 <b>대여자:</b> ${r.customer} (${r.phone || '연락처 미등록'})
+            </div>
+            <div style="font-size: 0.85rem; color: #475569; margin-bottom: 4px;">
+              ⏱ <b>대여기간:</b> ${r.startDate} ~ ${r.endDate}
+            </div>
+            <div style="font-size: 0.85rem; color: #475569; margin-bottom: 4px;">
+              💰 <b>렌탈금액:</b> ${r.amount || '0원'}
+            </div>
+            ${r.memo ? `<div style="font-size: 0.8rem; background: #fff; border: 1px solid #e2e8f0; padding: 6px; border-radius: 4px; margin-top: 6px;">📝 ${r.memo}</div>` : ''}
+          `;
+
+          // 1. 원클릭 입금완료 <-> 미수금 전환
+          item.querySelector(`#pay-btn-${r.id}`).addEventListener('click', () => {
+            r.paymentStatus = r.paymentStatus === 'PAID' ? 'UNPAID' : 'PAID';
+            saveRentals();
+            renderDetails();
+            updateStats();
+          });
+
+          // 2. 일정 삭제 기능 (확인 팝업 포함)
+          item.querySelector(`#del-btn-${r.id}`).addEventListener('click', () => {
+            const ok = confirm(`[${r.brand} ${r.model} - ${r.serial}]\n${r.customer}님의 배차 일정을 완전히 삭제하시겠습니까?`);
+            if (ok) {
+              rentals = rentals.filter(itemData => itemData.id !== r.id);
+              saveRentals();
+              renderCalendar();
+              renderDetails();
+            }
+          });
+
+          detailList.appendChild(item);
+        });
+      }
+
+      // 달력 이동 컨트롤 이벤트 리스너
+      document.getElementById('btn-prev-year').addEventListener('click', () => {
+        viewDate.setFullYear(viewDate.getFullYear() - 1);
+        renderCalendar();
+      });
+
+      document.getElementById('btn-next-year').addEventListener('click', () => {
+        viewDate.setFullYear(viewDate.getFullYear() + 1);
+        renderCalendar();
+      });
+
+      document.getElementById('btn-prev-month').addEventListener('click', () => {
+        viewDate.setMonth(viewDate.getMonth() - 1);
+        renderCalendar();
+      });
+
+      document.getElementById('btn-next-month').addEventListener('click', () => {
+        viewDate.setMonth(viewDate.getMonth() + 1);
+        renderCalendar();
+      });
+
+      selectYear.addEventListener('change', (e) => {
+        viewDate.setFullYear(parseInt(e.target.value));
+        renderCalendar();
+      });
+
+      selectMonth.addEventListener('change', (e) => {
+        viewDate.setMonth(parseInt(e.target.value));
+        renderCalendar();
+      });
+
+      document.getElementById('btn-today').addEventListener('click', () => {
+        viewDate = new Date();
+        selectedDateStr = todayISO;
+        renderCalendar();
+        renderDetails();
+      });
+
+      filterBrandSelect.addEventListener('change', (e) => {
+        brandFilter = e.target.value;
+        renderCalendar();
+        renderDetails();
+      });
+
+      // 모달 팝업 컨트롤
+      document.getElementById('btn-open-modal').addEventListener('click', () => {
+        document.getElementById('form-start-date').value = selectedDateStr;
+        document.getElementById('form-end-date').value = selectedDateStr;
+        modal.classList.remove('hidden');
+      });
+
+      document.getElementById('btn-close-modal').addEventListener('click', () => {
+        modal.classList.add('hidden');
+      });
+
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.classList.add('hidden');
+      });
+
+      // 신규 등록 제출
+      rentalForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const [brand, model] = document.getElementById('form-model').value.split('|');
+        const serial = document.getElementById('form-serial').value.trim();
+
+        const newRecord = {
+          id: Date.now(),
+          brand: brand,
+          model: model,
+          serial: serial,
+          customer: document.getElementById('form-customer').value.trim(),
+          phone: document.getElementById('form-phone').value.trim(),
+          startDate: document.getElementById('form-start-date').value,
+          endDate: document.getElementById('form-end-date').value,
+          amount: document.getElementById('form-amount').value.trim(),
+          paymentStatus: document.getElementById('form-payment').value,
+          memo: document.getElementById('form-memo').value.trim(),
+        };
+
+        rentals.push(newRecord);
+        saveRentals();
+
+        rentalForm.reset();
+        modal.classList.add('hidden');
+
+        renderCalendar();
+        renderDetails();
+      });
+
+      // 초기 실행
+      initDropdowns();
+      renderCalendar();
+      renderDetails();
+    </script>
+  </body>
+</html>
