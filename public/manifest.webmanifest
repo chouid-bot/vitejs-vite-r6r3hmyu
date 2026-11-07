@@ -1,0 +1,16 @@
+{
+  "name": "미니 굴삭기 렌탈 종합 관리 시스템",
+  "short_name": "굴삭기 렌탈",
+  "description": "미니 굴삭기 렌탈 현황과 일정을 관리하는 앱",
+  "lang": "ko",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f1f5f9",
+  "theme_color": "#1e293b",
+  "icons": [
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
